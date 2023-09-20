@@ -52,10 +52,10 @@ class PDF:
             file = PDF.getFile()
             if file != "":
                 self.files.append(file)
-            if len(self.files) < 2:
-                print("Erreur, il n'y a pas à minima 2 fichiers pdf valide.")
-                exit(2)
-        return self.openAndReadFile(file)
+        if len(self.files) < 2:
+            print("Erreur, il n'y a pas à minima 2 fichiers pdf valide.")
+            exit(2)
+        return self.openAndReadFile()
 
     def openAndReadFile(self):
         if not self.files:
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     print()
     foxypdf = PDF()
     while True:
-        print(" 1-Combiner des fichiers PDF.\n 2-Extraire du texte.\n 3-Extraire des images.")
+        print(" 1-Combiner des fichiers PDF.\n 2-Extraire du texte.\n 3-Extraire des images.\n 4-Quitter")
         print()
         choix = input("Votre choix ? : ")
         if choix == "1":
@@ -120,6 +120,8 @@ if __name__ == "__main__":
             foxypdf.extractText()
         elif choix == "3":
             foxypdf.extractImage()
+        elif choix == "4":
+            exit(0)
         else:
             print("Erreur, vous n'avez pas choisis une action valide.\n Recommencez s'il vous plait.")
             print()
