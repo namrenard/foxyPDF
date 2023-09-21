@@ -23,15 +23,15 @@ class PDF:
 
     # Fonctions pour lire les paths de chaque fichier
     @staticmethod
-    def getFile() -> str:
-        prompt = input("Veuillez entrer un nom de fichier pdf valide en terminant par .pdf :")
-        # gestion erreur de fichier non pdf.
-        while not prompt.endswith(".pdf"):
-            print("ERREUR, vous n'avez pas chargé un fichier PDF.")
-            prompt = input("Veuillez entrer un nom de fichier pdf valide en terminant par .pdf :")
+    def get_file() -> str:
+        prompt = input("Veuillez entrer un nom de fichier :")
+        prompt = prompt + ".pdf"
 
         try:
             if os.path.join(prompt):
+                ## debug
+                print(f"DEBUG : {os.path.join(prompt)}")
+                ########
                 return prompt
         except FileNotFoundError:
             print("Erreur, le fichier pdf n'existe pas.")
@@ -39,46 +39,42 @@ class PDF:
             print(" Erreur, c'est un dossier et non un fichier pdf.")
         return ""
 
-    def fusionFiles(self):
+    def fusion_files(self):
         print("Veuillez indiquer le nombre de fichiers PDF à combiner.")
-        print("Note : les fichiers seront fusionnés à la suite.")
-        scanner = input(" ? : ")
-        # on vérifie que c'est bien un nombre
+        scanner = input(" ? >>> ")
+        # on vérifie que c'est bien un nombre et qu'il y a 2 fichiers à minima.
         while not scanner.isdigit() or int(scanner) < 2:
             print("Erreur, merci d'entrer un nombre supérieur ou égale à 2.")
-            scanner = input(" ? : ")
+            scanner = input(" ? >>> ")
 
         for i in range(int(scanner)):
-            file = PDF.getFile()
+            file = PDF.get_file()
             if file != "":
-                self.files.append(file)
+                self.files.append(os.path.realpath(file))
         if len(self.files) < 2:
             print("Erreur, il n'y a pas à minima 2 fichiers pdf valide.")
             exit(2)
-        return self.openAndReadFile()
+        return self.make_pdf()
 
-    def openAndReadFile(self):
+    def make_pdf(self):
         if not self.files:
             print("Aucun fichier PDF à fusionner.")
             return
 
         datas = PdfFileWriter()
-
         for file_path in self.files:
             try:
-                with open(file_path, "rb") as file_open:
-                    file_read = PdfFileReader(file_open)
-                    for page_number in range(file_read.getNumPages()):
-                        datas.addPage(file_read.getPage(page_number))
+                file_open = open(file_path, "rb")
+                file_read = PdfFileReader(file_open)
+                for i in range(file_read.getNumPages()):
+                    datas.addPage(file_read.getPage(i))
 
             except Exception as e:
                 print(f"Erreur lors de la lecture du fichier {file_path}: {str(e)}")
+                exit(-1)
 
-        return self.writeFile(datas)
-
-    def writeFile(self, datas):
         date = datetime.date.today().strftime("%d-%m-%Y")
-        prompt = input("Veuillez donner un nom de fichier pour le fichier combiné : ")
+        prompt = input("Veuillez donner un nom de fichier pour le fichier combiné :")
         if not prompt:
             filename = f"fichier_combine_{date}.pdf"
             print(f"Vous n'avez pas donné de nom, {filename} sera le nom du fichier combiné.")
@@ -87,19 +83,23 @@ class PDF:
             print(f"{filename} sera le nom du fichier combiné.")
 
         try:
-            with open(filename, "wb") as file_out:
-                datas.write(file_out)
+            file_out = open(filename, "wb")
+            datas.write(file_out)
+            print()
             print(f"Fusion réussie. Le fichier combiné est enregistré sous {filename}")
+            file_out.close()
+            self.files.clear()
             return 1
         except Exception as e:
             print(f"Erreur lors de l'écriture du fichier combiné : {str(e)}")
+            self.files.clear()
             return 0
 
-    def extractText(self):
+    def extract_text(self):
         print("Not implemented yet")
         exit(3)
 
-    def extractImage(self):
+    def extract_image(self):
         print("Not implemented yet")
         exit(4)
 
@@ -107,21 +107,22 @@ class PDF:
 # Main--------------------------------------------------------
 if __name__ == "__main__":
     print("-----FoxyPDF v1-----")
-    print("Veuillez choisir une action en indiquant un numéro 1,2 ou 3.")
-    print()
+    print("Veuillez choisir une action en indiquant un numéro entre 1 et 4.")
+    print("--------------------")
     foxypdf = PDF()
     while True:
-        print(" 1-Combiner des fichiers PDF.\n 2-Extraire du texte.\n 3-Extraire des images.\n 4-Quitter")
+        print(" 1-Combiner des fichiers PDF.\n 2-Extraire du texte.\n 3-Extraire des images.\n 4-Quitter.")
         print()
-        choix = input("Votre choix ? : ")
+        choix = input("Votre choix ? >>> ")
         if choix == "1":
-            foxypdf.fusionFiles()
+            foxypdf.fusion_files()
         elif choix == "2":
-            foxypdf.extractText()
+            foxypdf.extract_text()
         elif choix == "3":
-            foxypdf.extractImage()
+            foxypdf.extract_image()
         elif choix == "4":
-            exit(0)
+            print("Au revoir.")
+            exit()
         else:
             print("Erreur, vous n'avez pas choisis une action valide.\n Recommencez s'il vous plait.")
             print()
