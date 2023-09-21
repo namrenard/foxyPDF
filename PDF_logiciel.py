@@ -24,22 +24,30 @@ class PDF:
     # Fonctions pour lire les paths de chaque fichier
     @staticmethod
     def get_file() -> str:
+        """
+        Méthode statique pour recupérer un nom de fichier pdf.
+        :return: le nom du fichier sous forme de string
+        """
         prompt = input("Veuillez entrer un nom de fichier :")
         prompt = prompt + ".pdf"
 
         try:
             if os.path.join(prompt):
-                ## debug
-                print(f"DEBUG : {os.path.join(prompt)}")
-                ########
                 return prompt
         except FileNotFoundError:
             print("Erreur, le fichier pdf n'existe pas.")
+            exit(0)
         except IsADirectoryError:
             print(" Erreur, c'est un dossier et non un fichier pdf.")
+            exit(0)
         return ""
 
     def fusion_files(self):
+        """
+        Méthode pour gérer le fusion de plusieurs fichiers PDF complet ensemble.
+
+        :return: la méthode pour fusionner la liste de fichiers PDF
+        """
         print("Veuillez indiquer le nombre de fichiers PDF à combiner.")
         scanner = input(" ? >>> ")
         # on vérifie que c'est bien un nombre et qu'il y a 2 fichiers à minima.
@@ -53,13 +61,18 @@ class PDF:
                 self.files.append(os.path.realpath(file))
         if len(self.files) < 2:
             print("Erreur, il n'y a pas à minima 2 fichiers pdf valide.")
-            exit(2)
+            exit(0)
         return self.make_pdf()
 
     def make_pdf(self):
+        """
+        Méthode de création d'un fichier pdf combiné à partir d'une liste de fichiers pdf.
+
+        :return: code 1 ou 0, si la fusion a réussi ou pas.
+        """
         if not self.files:
             print("Aucun fichier PDF à fusionner.")
-            return
+            return exit(0)
 
         datas = PdfFileWriter()
         for file_path in self.files:
@@ -74,7 +87,7 @@ class PDF:
                 exit(-1)
 
         date = datetime.date.today().strftime("%d-%m-%Y")
-        prompt = input("Veuillez donner un nom de fichier pour le fichier combiné :")
+        prompt = input("Veuillez donner un nom de fichier de sortie sinon faites 'ENTRER' :")
         if not prompt:
             filename = f"fichier_combine_{date}.pdf"
             print(f"Vous n'avez pas donné de nom, {filename} sera le nom du fichier combiné.")
@@ -85,8 +98,8 @@ class PDF:
         try:
             file_out = open(filename, "wb")
             datas.write(file_out)
-            print()
             print(f"Fusion réussie. Le fichier combiné est enregistré sous {filename}")
+            print()
             file_out.close()
             self.files.clear()
             return 1
