@@ -28,7 +28,7 @@ class PDF:
         Méthode statique pour recupérer un nom de fichier pdf.
         :return: le nom du fichier sous forme de string
         """
-        prompt = input("Veuillez entrer un nom de fichier :")
+        prompt = input("Veuillez entrer un nom de fichier (sans l'extension):")
         prompt = prompt + ".pdf"
 
         try:
@@ -109,12 +109,74 @@ class PDF:
             return 0
 
     def extract_text(self):
-        print("Not implemented yet")
-        exit(3)
+        """
+        Méthode d'extraction de texte dans un fichier .txt depuis un fichier PDF.
+        L'extraction peut se faire sur le fichier en entier ou des pages définies.
+
+        :return: -1 ou 0 si l'extraction a pu se faire.
+        """
+        file = PDF.get_file()
+        file_output = f"texte_extrait_de_{file.replace('.pdf', '')}.txt"
+        if file != "":
+            try:
+                pdf_open = open(file, "rb")
+                pdf_read = PdfFileReader(pdf_open)
+                print(
+                    "\nConsignes pour l'extraction:"
+                    "\n+ Donnez les numéros de chaque page du fichier à extraire,"
+                    "\n+ Séparez les par une virgule,"
+                    "\n+ Mettre '-1' pour extraire toutes les pages du fichier,"
+                    "\n+ Faites 'ENTRER' pour valider.")
+                print("Note : L'extraction est dépendante de la fabrication du PDF."
+                      "\nExemple : Un scan ou image avec texte ne marchera pas, un fichier texte converti oui.")
+                pages_choice = input("numéro(s) de(s) page(s) ? >>>")
+                # vérifie si l'utilisateur a bien mis un numéro
+                while pages_choice == "":
+                    print("Erreur : Aucun numéro n'a été donnée.")
+                    pages_choice = input("numéro(s) de(s) page(s) ? >>>")
+                # tester le nombre de pages extrait par rapport au nombre de page totale
+                while int(pages_choice) > pdf_read.numPages:
+                    print("Erreur : le nombre de pages ou extraire le texte est supérieur au nombre totale de page.")
+                    pages_choice = input("numéro(s) de(s) page(s) ? >>>")
+                # le code -1 c'est pour tout extraire le fichier.
+                if pages_choice == "-1":
+                    pages = []
+                    for i in range(pdf_read.numPages):
+                        pages.append(i)
+                else:
+                    pages = pages_choice.split(',')
+                    pages = list(map(int, pages))
+
+                for e in pages:
+                    try:
+                        txt_output = open(file_output, "a", encoding="utf-8")
+                        page = pdf_read.getPage(e-1)
+                        txt_extract = page.extractText()
+                        # Try different encodings if UTF-8 fails
+                        try:
+                            txt_output.write(txt_extract)
+                        except UnicodeEncodeError:
+                            print(f"Encoding issue with page {e}. Trying a different encoding.")
+                            txt_output.write(txt_extract.encode("latin1", "replace").decode("latin1"))
+
+                        pdf_open.close()
+                        print("\n L'extraction est terminé.")
+                        return 1
+                    except Exception as e:
+                        print(f"Erreur dans l'extraction du texte : {str(e)}")
+                        pdf_open.close()
+                        return 0
+            except FileNotFoundError:
+                print("Erreur: aucun fichier pdf n'a été trouvé.")
+                exit(0)
+        else:
+            print("Erreur: le fichier est vide.")
+        return 0
+
 
     def extract_image(self):
         print("Not implemented yet")
-        exit(4)
+        exit(0)
 
 
 # Main--------------------------------------------------------
@@ -124,7 +186,8 @@ if __name__ == "__main__":
     print("--------------------")
     foxypdf = PDF()
     while True:
-        print(" 1-Combiner des fichiers PDF.\n 2-Extraire du texte.\n 3-Extraire des images.\n 4-Quitter.")
+        print(
+            " 1-Combiner des fichiers PDF.\n 2-Extraire du texte vers un fichier texte.\n 3-Extraire des images.\n 4-Quitter.")
         print()
         choix = input("Votre choix ? >>> ")
         if choix == "1":

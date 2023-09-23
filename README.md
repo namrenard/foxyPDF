@@ -8,13 +8,15 @@ Try ghostscript v.10.00.00 to regenerate the PDF if you have any problem regardi
 
 ## Changelog
 
-Current version : v1.0
+Current stable version : v1.0
+    - Combine complete PDF together
+    - Extract text from one PDF file to text format
 
 ## Features
 
-- Combine pages in pdf and not only full pdf files.
-- Extraction text
-- Extraction image
+- Combine full pdf or only pages
+- Text extraction full document or pages selection to other format
+- Image extraction full document or pages selection to svg/png/jpg format
 - GUI Interface
 
 ## Author
