@@ -1,5 +1,5 @@
 import os.path
-
+import re
 from PyPDF2 import PdfWriter, PdfReader
 import datetime
 
@@ -116,7 +116,6 @@ class PDF:
         :return: -1 ou 0 si l'extraction a pu se faire.
         """
         file = PDF.get_file()
-        file_output = f"texte_extrait_de_{file.replace('.pdf', '')}.txt"
         if file != "":
             try:
                 pdf_open = open(file, "rb")
@@ -127,48 +126,54 @@ class PDF:
                     "\n+ Séparez les par une virgule,"
                     "\n+ Mettre '-1' pour extraire toutes les pages du fichier,"
                     "\n+ Faites 'ENTRER' pour valider.")
-                print("Note : L'extraction est dépendante de la fabrication du PDF."
-                      "\nExemple : Un scan ou image avec texte ne marchera pas, un fichier texte converti oui.")
+                print("++ Note : L'extraction est dépendante de la fabrication du PDF."
+                      "\nExemple : Un scan d'un texte ou image avec texte ne marchera pas")
                 pages_choice = input("numéro(s) de(s) page(s) ? >>>")
+
                 # vérifie si l'utilisateur a bien mis un numéro
-                while pages_choice == "":
-                    print("Erreur : Aucun numéro n'a été donnée.")
+                while pages_choice == "" or "0" in pages_choice:
+                    print("Erreur : Aucun numéro n'a été donné.")
                     pages_choice = input("numéro(s) de(s) page(s) ? >>>")
-                # tester le nombre de pages extrait par rapport au nombre de page totale
-                while int(pages_choice) > pdf_read.numPages:
-                    print("Erreur : le nombre de pages ou extraire le texte est supérieur au nombre totale de page.")
-                    pages_choice = input("numéro(s) de(s) page(s) ? >>>")
+
                 # le code -1 c'est pour tout extraire le fichier.
                 if pages_choice == "-1":
                     pages = []
-                    for i in range(pdf_read.numPages):
+                    for i in range(len(pdf_read.pages)):
                         pages.append(i)
                 else:
-                    pages = pages_choice.split(',')
-                    pages = list(map(int, pages))
+                    clean_pages_choice = re.split(':|;|,|\*|\n| |\t', pages_choice)
+                    pages = list(map(int, clean_pages_choice))
+                    for i in range(len(pages)):
+                        pages[i] = pages[i]-1
+                # Gestion erreur trop de pages
+                if len(pages) > len(pdf_read.pages):
+                    print("\nErreur : Vous avez indiqué trop de pages.\nExtraction interrompue.\n")
+                    return 0
 
-                for e in pages:
+                file_output = f"texte_extrait_de_{file.replace('.pdf', '')}.txt"
+                txt_output = open(file_output, "a", encoding="utf-8")
+                for p in pages:
                     try:
-                        txt_output = open(file_output, "a", encoding="utf-8")
-                        page = pdf_read.getPage(e - 1)
-                        txt_extract = page.extractText()
+                        page = pdf_read.pages[p]
+                        txt_extract = page.extract_text()
                         # Try different encodings if UTF-8 fails
                         try:
+                            txt_output.write(f"\n-----PAGE {p}---------\n")
                             txt_output.write(txt_extract)
-                        except UnicodeEncodeError:
-                            print(f"Encoding issue with page {e}. Trying a different encoding.")
-                            txt_output.write(txt_extract.encode("latin1", "replace").decode("latin1"))
 
-                        pdf_open.close()
-                        print("\n L'extraction est terminé.")
-                        return 1
+                        except UnicodeEncodeError:
+                            print(f"Problème d'encodage 'utf-8' avec {p}. Changement d'encodage avec 'latin1'.")
+                            txt_output.write(txt_extract.encode("latin1", "replace").decode("latin1"))
                     except Exception as e:
                         print(f"Erreur dans l'extraction du texte : {str(e)}")
-                        pdf_open.close()
                         return 0
+
+                print("\n L'extraction est terminé.\n")
+                return 1
+
             except FileNotFoundError:
                 print("Erreur: aucun fichier pdf n'a été trouvé.")
-                exit(0)
+                return 0
         else:
             print("Erreur: le fichier est vide.")
         return 0
@@ -187,7 +192,7 @@ if __name__ == "__main__":
     foxypdf = PDF()
     while True:
         print(
-            "1-Combiner des fichiers PDF.\n 2-Extraire du texte vers un fichier texte.\n 3-Extraire des images.\n "
+            " 1-Combiner des fichiers PDF.\n 2-Extraire du texte vers un fichier texte.\n 3-Extraire des images.\n "
             "4-Quitter.")
         print()
         choix = input("Votre choix ? >>> ")
