@@ -1,6 +1,6 @@
 import os.path
 
-from PyPDF2 import PdfFileWriter, PdfFileReader
+from PyPDF2 import PdfWriter, PdfReader
 import datetime
 
 """
@@ -74,13 +74,13 @@ class PDF:
             print("Aucun fichier PDF à fusionner.")
             return exit(0)
 
-        datas = PdfFileWriter()
+        datas = PdfWriter()
         for file_path in self.files:
             try:
                 file_open = open(file_path, "rb")
-                file_read = PdfFileReader(file_open)
-                for i in range(file_read.getNumPages()):
-                    datas.addPage(file_read.getPage(i))
+                file_read = PdfReader(file_open)
+                for i in range(len(file_read.pages)):
+                    datas.add_page(file_read.pages[i])
 
             except Exception as e:
                 print(f"Erreur lors de la lecture du fichier {file_path}: {str(e)}")
@@ -120,7 +120,7 @@ class PDF:
         if file != "":
             try:
                 pdf_open = open(file, "rb")
-                pdf_read = PdfFileReader(pdf_open)
+                pdf_read = PdfReader(pdf_open)
                 print(
                     "\nConsignes pour l'extraction:"
                     "\n+ Donnez les numéros de chaque page du fichier à extraire,"
@@ -150,7 +150,7 @@ class PDF:
                 for e in pages:
                     try:
                         txt_output = open(file_output, "a", encoding="utf-8")
-                        page = pdf_read.getPage(e-1)
+                        page = pdf_read.getPage(e - 1)
                         txt_extract = page.extractText()
                         # Try different encodings if UTF-8 fails
                         try:
@@ -173,10 +173,10 @@ class PDF:
             print("Erreur: le fichier est vide.")
         return 0
 
-
     def extract_image(self):
-        print("Not implemented yet")
-        exit(0)
+        file = PDF.get_file()
+
+        return 0
 
 
 # Main--------------------------------------------------------
@@ -187,7 +187,8 @@ if __name__ == "__main__":
     foxypdf = PDF()
     while True:
         print(
-            " 1-Combiner des fichiers PDF.\n 2-Extraire du texte vers un fichier texte.\n 3-Extraire des images.\n 4-Quitter.")
+            "1-Combiner des fichiers PDF.\n 2-Extraire du texte vers un fichier texte.\n 3-Extraire des images.\n "
+            "4-Quitter.")
         print()
         choix = input("Votre choix ? >>> ")
         if choix == "1":
