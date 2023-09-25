@@ -168,7 +168,7 @@ class PDF:
                         print(f"Erreur dans l'extraction du texte : {str(e)}")
                         return 0
 
-                print("\n L'extraction est terminé.\n")
+                print("\n Succès : L'extraction de texte(s) est terminée.\n")
                 return 1
 
             except FileNotFoundError:
@@ -179,21 +179,138 @@ class PDF:
         return 0
 
     def extract_image(self):
-        file = PDF.get_file()
+        """
+        Methode d'extraction des images en passant par le parametre 'image' du fichier.
+        Cette méthode prend en compte un fichier dont les images ont été compressée
 
-        return 0
+        :return: 1 ou 0 suivant que l'extraction est réussi
+        """
+        file = PDF.get_file()
+        pdf_read = PdfReader(file)
+        print("Veuillez indiquer une page pour en extraire les images ou '0' pour tout le fichier.")
+        print("Note : Si cela ne marche pas ou une erreur, essayer l'extraction forcé. ")
+        page_number = input("page ? >>>")
+        while not page_number.isnumeric() or page_number == "":
+            print("Erreur : Veuillez indiquer un nombre valide.")
+            page_number = input("page ? >>>")
+        else:
+            compteur = 0
+            if page_number != "0":
+                page_number_int = int(page_number) - 1
+                page = pdf_read.pages[page_number_int]
+                for image in page.images:
+                    try:
+                        file_output = open(str(compteur) + "_" + image.name, "wb")
+                        file_output.write(image.data)
+                        compteur += 1
+                        file_output.close()
+                    except Exception as e:
+                        print(f"Erreur : l'extraction a rencontré un problème : {str(e)}.\n ")
+                        return 0
+            else:
+                pages_total = pdf_read.pages
+                for i in range(len(pages_total)):
+                    for image in pages_total[i].images:
+                        try:
+                            file_output = open(f"{str(compteur)}_page_{i}_{image.name}", "wb")
+                            file_output.write(image.data)
+                            compteur +=1
+                            file_output.close()
+                        except Exception as e:
+                            print(f"Erreur : l'extraction a rencontré un problème : {str(e)}.\n ")
+                            return 0
+            print("\nSuccès : l'extraction des images est terminées.\n")
+            return 1
+
+    def extract_image2(self):
+        """
+        Méthode d'extraction "forcé" d'images en se basant sur le les données contenu dans le parametre xObject.
+        Elle fonctionne si l'attribut "Filtre" est rensignée dans les metadonnées du Xobject et applique l'extension
+        JPEG ou PNG en fonction du filtre.
+        Elle peut renvoyer des objets "corrompu" si pas de filtre en appliquant JPG par défault.
+
+        :return: 1 ou 0 si l'extraction a pu être faite.
+        """
+        file = PDF.get_file()
+        pdf_read = PdfReader(file)
+        print("Veuillez indiquer une page pour en extraire les images ou '0' pour tout le fichier.")
+        print("Note : Si l'image n'a pas été compressé, l'extraction échouera.")
+        page_number = input("page ? >>>")
+        while not page_number.isnumeric() or page_number == "":
+            print("Erreur : Veuillez indiquer un nombre valide.")
+            page_number = input("page ? >>>")
+        else:
+            if page_number != "0":
+                page_number_int = int(page_number) - 1
+                page = pdf_read.pages[page_number_int]
+                #ref : https://stackoverflow.com/questions/2693820/extract-images-from-pdf-without-resampling-in-python/37055040#37055040
+                xObject = page['/Resources']['/XObject'].get_object()
+                try:
+                    for obj in xObject:
+                        if xObject[obj]['/Subtype'] == '/Image':
+                            image = xObject[obj]
+                            image_data = image.get_data()
+                            if '/Filter' in image:
+                                filters = image['/Filter']
+                                if '/DCTDecode' in filters:
+                                    file_extension = 'jpg'
+                                elif '/FlateDecode' in filters:
+                                    file_extension = 'png'
+                                else:
+                                    file_extension = 'inconnu'
+                            else:
+                                # Par défaut, supposez que c'est du JPEG si le filtre n'est pas spécifié
+                                file_extension = 'jpg'
+                            file_output = open(f"image_{page_number_int}_{obj[1:]}.{file_extension}", "wb")
+                            file_output.write(image_data)
+                            file_output.close()
+                except Exception as e:
+                    print(f"Erreur : l'extraction a rencontré un problème : {str(e)}.\n ")
+                    return 0
+            else:
+                pages_total = pdf_read.pages
+                for i in range(len(pages_total)):
+                    page = pdf_read.pages[i]
+                    xObject = page['/Resources']['/XObject'].get_object()
+                    try:
+                        for obj in xObject:
+                            if xObject[obj]['/Subtype'] == '/Image':
+                                image = xObject[obj]
+                                image_data = image.get_data()
+                                if '/Filter' in image:
+                                    filters = image['/Filter']
+                                    if '/DCTDecode' in filters:
+                                        file_extension = 'jpg'
+                                    elif '/FlateDecode' in filters:
+                                        file_extension = 'png'
+                                    else:
+                                        file_extension = 'inconnu'
+                                else:
+                                    # Par défaut
+                                    file_extension = 'jpg'
+                                file_output = open(f"page_{i}_{obj[1:]}.{file_extension}", "wb")
+                                file_output.write(image_data)
+                                file_output.close()
+                    except Exception as e:
+                        print(f"Erreur : l'extraction a rencontré un problème : {str(e)}.\n ")
+                        return 0
+            print("\nSuccès : l'extraction des images est terminées.\n")
+            return 1
 
 
 # Main--------------------------------------------------------
 if __name__ == "__main__":
-    print("-----FoxyPDF v1-----")
-    print("Veuillez choisir une action en indiquant un numéro entre 1 et 4.")
+    print("-----------FoxyPDF v1-----------------")
+    print("Veuillez choisir une action en indiquant un numéro entre 1 et 5.")
     print("--------------------")
     foxypdf = PDF()
     while True:
         print(
-            " 1-Combiner des fichiers PDF.\n 2-Extraire du texte vers un fichier texte.\n 3-Extraire des images.\n "
-            "4-Quitter.")
+            " 1-Combiner des fichiers PDF."
+            "\n 2-Extraire du texte vers un fichier texte."
+            "\n 3-Extraire des images."
+            "\n 4-Extraction forcée des images (si l'extraction '3' n'a pas marchée)."
+            "\n 5-Quitter.")
         print()
         choix = input("Votre choix ? >>> ")
         if choix == "1":
@@ -203,6 +320,8 @@ if __name__ == "__main__":
         elif choix == "3":
             foxypdf.extract_image()
         elif choix == "4":
+            foxypdf.extract_image2()
+        elif choix == "5":
             print("Au revoir.")
             exit()
         else:
