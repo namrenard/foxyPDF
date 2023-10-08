@@ -1,5 +1,4 @@
-![](../../../../Desktop/foxy_pdf_v1.png)
-
+![](foxy_pdf_v1.png)
 
 # FoxyPDF
 FoxyPDF is a small program written in python in order to combine or extract image or texte from PDF file.
