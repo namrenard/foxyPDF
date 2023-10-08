@@ -1,15 +1,23 @@
+![](../../../../Desktop/foxy_pdf_v1.png)
+
+
 # FoxyPDF
-FoxyPDF is a small program written in python in order to combine or extract image of texte from PDF' file.
+FoxyPDF is a small program written in python in order to combine or extract image or texte from PDF file.
 
 
-## About
+## Warning
 - Combined function work only on PDF with no corrupted header information inside.
 Try ghostscript v.10.00.00 to regenerate the PDF if you have any problem regarding the fusion.
-
+- PDF files need to be in the root directory of the script or else, don't forget to
+add in the name given the directory where is the PDF. (ex : /path/name_of_pdf)
 
 ## Changelog
 
-Current stable version : v1.2
+Current stable version : v1.3
+    - Combine different pages from different pdf together
+    - FIX : Change name method "fusion_file" to "combine_menu"
+    - FIX : Change type of extracts' methods into "static method"
+v1.2
     - Combine complete PDF together
     - Extract text from one PDF file to text format (full or page selection)
     - Extract image from PDF file (total or selected page)
@@ -24,8 +32,8 @@ v1.0
 
 ## Features
 
-- only pages from different pdf
 - Text extraction full document or pages selection to other format
+- CLI Interface with argparse or click libraries (?)
 - GUI Interface
 
 

@@ -3,34 +3,25 @@ import re
 from PyPDF2 import PdfWriter, PdfReader
 import datetime
 
-"""
-Version 1 : combiner 2 fichiers par selections.
-------------------
-1/ le path pour les deux fichiers d'entrées -> récupérer les noms des deux fichiers
-1.2/ le path pour le fichier de sortie -> donner un nom
-1.3/ la récupération des fichiers et la génération du fichier combiner
-1.4/ on couple tous les fichiers sans chercher les pages.
-2/ Extraire image : https://pypdf2.readthedocs.io/en/3.0.0/user/extract-images.html
-3/ Extraire texte : https://pypdf2.readthedocs.io/en/3.0.0/user/extract-text.html
-
-"""
-
 
 class PDF:
+    """
+    Classe implémentant la librairie PyPDF2 pour combiner des pdf,extraire du texte ou des images de fichiers pdf
+    """
 
     def __init__(self):
         self.files = []
+        self.files_extract = []
 
-    # Fonctions pour lire les paths de chaque fichier
     @staticmethod
     def get_file() -> str:
         """
-        Méthode statique pour recupérer un nom de fichier pdf.
+        Méthode statique pour récupérer un nom de fichier pdf.
         :return: le nom du fichier sous forme de string
         """
         prompt = input("Veuillez entrer un nom de fichier (sans l'extension):")
-        prompt = prompt + ".pdf"
-
+        if not prompt.endswith(".pdf"):
+            prompt = prompt + ".pdf"
         try:
             if os.path.join(prompt):
                 return prompt
@@ -42,50 +33,75 @@ class PDF:
             exit(0)
         return ""
 
-    def fusion_files(self):
+    def combine_menu(self):
         """
-        Méthode pour gérer le fusion de plusieurs fichiers PDF complet ensemble.
+        Méthode pour gérer la fusion de plusieurs fichiers PDF complet ou des pages de plusieurs
+        fichiers différents.
 
         :return: la méthode pour fusionner la liste de fichiers PDF
         """
-        print("Veuillez indiquer le nombre de fichiers PDF à combiner.")
-        scanner = input(" ? >>> ")
-        # on vérifie que c'est bien un nombre et qu'il y a 2 fichiers à minima.
-        while not scanner.isdigit() or int(scanner) < 2:
-            print("Erreur, merci d'entrer un nombre supérieur ou égale à 2.")
-            scanner = input(" ? >>> ")
+        print("Que voulez-vous combiner ?"
+              "\n-1 des fichiers complets."
+              "\n-2 des pages issus de fichiers différents.")
+        scanner = input("Votre choix ? >>>")
+        while int(scanner) != 1 and int(scanner) != 2:
+            scanner = input("Votre choix ? >>>")
 
-        for i in range(int(scanner)):
-            file = PDF.get_file()
-            if file != "":
-                self.files.append(os.path.realpath(file))
-        if len(self.files) < 2:
-            print("Erreur, il n'y a pas à minima 2 fichiers pdf valide.")
-            exit(0)
-        return self.make_pdf()
+        # fichier complet
+        if int(scanner) == 1:
+            print("Combien de fichiers sont à fusionner ?")
+            scanner2 = input(" ? >>> ")
+            # on vérifie que c'est bien un nombre et qu'il y a 2 fichiers à minima sinon 2 fichiers par défaut.
+            if not scanner2.isnumeric() or int(scanner) >= 2:
+                scanner2 = "2"
+            for i in range(int(scanner2)):
+                file = PDF.get_file()
+                if file != "":
+                    self.files.append(os.path.realpath(file))
+            # Verification que le nombre de fichiers minimal est bien de 2 pour une fusion.
+            if len(self.files) < 2:
+                print("Erreur, il n'y a qu'un fichier PDF valide.")
+                return 0
+            return self.combine_files()
+        else:
+            # fusion de pages de fichiers pdf différents.
+            choix_fichier = False
+            while not choix_fichier:
+                f = PDF.get_file()
+                file = os.path.realpath(f)
+                pages_input = input("Indiquez numériquement les pages (séparées par des virgules): >>>")
+                clean_pages = re.split(':|;|,|\*|\n| |\t', pages_input)
+                new_element = {"file": file, "pages": clean_pages}
+                self.files_extract.append(new_element)
+                next_file = input("Ajouter un autre fichier pdf ? >>>  o/n")
+                if next_file.lower() != "o":
+                    choix_fichier = True
+            return self.combine_pages()
 
-    def make_pdf(self):
+    def combine_pages(self):
         """
-        Méthode de création d'un fichier pdf combiné à partir d'une liste de fichiers pdf.
+        Methode de création d'un fichier pdf avec des pages de plusieurs fichiers pdf
 
-        :return: code 1 ou 0, si la fusion a réussi ou pas.
+        :return: code 1 ou 0 si la fusion a réussi ou pas.
         """
-        if not self.files:
-            print("Aucun fichier PDF à fusionner.")
-            return exit(0)
-
+        if not self.files_extract:
+            print("Aucune page à fusionner.")
+            return 0
         datas = PdfWriter()
-        for file_path in self.files:
+        for element in self.files_extract:
+            file = element["file"]
+            pages = list(map(int, element["pages"]))
+            for i in range(len(pages)):
+                pages[i] = pages[i] - 1
             try:
-                file_open = open(file_path, "rb")
+                file_open = open(file, "rb")
                 file_read = PdfReader(file_open)
-                for i in range(len(file_read.pages)):
-                    datas.add_page(file_read.pages[i])
-
+                for p in pages:
+                    if int(p) < len(file_read.pages):
+                        datas.add_page(file_read.pages[p])
             except Exception as e:
-                print(f"Erreur lors de la lecture du fichier {file_path}: {str(e)}")
-                exit(-1)
-
+                print(f"Erreur dans la fusion des pages : {str(e)}")
+                return 0
         date = datetime.date.today().strftime("%d-%m-%Y")
         prompt = input("Veuillez donner un nom de fichier de sortie sinon faites 'ENTRER' :")
         if not prompt:
@@ -101,6 +117,49 @@ class PDF:
             print(f"Fusion réussie. Le fichier combiné est enregistré sous {filename}")
             print()
             file_out.close()
+            self.files_extract.clear()
+            return 1
+        except Exception as e:
+            print(f"Erreur lors de l'écriture du fichier combiné : {str(e)}")
+            self.files_extract.clear()
+            return 0
+
+    def combine_files(self):
+        """
+        Méthode de création d'un fichier pdf combiné à partir d'une liste de fichiers pdf.
+
+        :return: code 1 ou 0, si la fusion a réussi ou pas.
+        """
+        if not self.files:
+            print("Aucun fichier PDF à fusionner.")
+            return 0
+
+        datas = PdfWriter()
+        for file_path in self.files:
+            try:
+                file_open = open(file_path, "rb")
+                file_read = PdfReader(file_open)
+                for i in range(len(file_read.pages)):
+                    datas.add_page(file_read.pages[i])
+            except Exception as e:
+                print(f"Erreur lors de la lecture du fichier {file_path}: {str(e)}")
+                return 0
+
+        date = datetime.date.today().strftime("%d-%m-%Y")
+        prompt = input("Veuillez donner un nom de fichier de sortie sinon faites 'ENTRER' :")
+        if not prompt:
+            filename = f"fichier_combine_{date}.pdf"
+            print(f"Vous n'avez pas donné de nom, {filename} sera le nom du fichier combiné.")
+        else:
+            filename = f"{prompt}.pdf"
+            print(f"{filename} sera le nom du fichier combiné.")
+
+        try:
+            file_out = open(filename, "wb")
+            datas.write(file_out)
+            print(f"Fusion réussie.\nLe fichier combiné est enregistré sous le nom : {filename}")
+            print()
+            file_out.close()
             self.files.clear()
             return 1
         except Exception as e:
@@ -108,7 +167,8 @@ class PDF:
             self.files.clear()
             return 0
 
-    def extract_text(self):
+    @staticmethod
+    def extract_text():
         """
         Méthode d'extraction de texte dans un fichier .txt depuis un fichier PDF.
         L'extraction peut se faire sur le fichier en entier ou des pages définies.
@@ -178,7 +238,8 @@ class PDF:
             print("Erreur: le fichier est vide.")
         return 0
 
-    def extract_image(self):
+    @staticmethod
+    def extract_image():
         """
         Methode d'extraction des images en passant par le parametre 'image' du fichier.
         Cette méthode prend en compte un fichier dont les images ont été compressée
@@ -214,7 +275,7 @@ class PDF:
                         try:
                             file_output = open(f"{str(compteur)}_page_{i}_{image.name}", "wb")
                             file_output.write(image.data)
-                            compteur +=1
+                            compteur += 1
                             file_output.close()
                         except Exception as e:
                             print(f"Erreur : l'extraction a rencontré un problème : {str(e)}.\n ")
@@ -222,9 +283,10 @@ class PDF:
             print("\nSuccès : l'extraction des images est terminées.\n")
             return 1
 
-    def extract_image2(self):
+    @staticmethod
+    def forced_extraction():
         """
-        Méthode d'extraction "forcé" d'images en se basant sur le les données contenu dans le parametre xObject.
+        Méthode d'extraction "forcée" d'images en se basant sur le les données contenu dans le parametre x_object.
         Elle fonctionne si l'attribut "Filtre" est rensignée dans les metadonnées du Xobject et applique l'extension
         JPEG ou PNG en fonction du filtre.
         Elle peut renvoyer des objets "corrompu" si pas de filtre en appliquant JPG par défault.
@@ -243,12 +305,13 @@ class PDF:
             if page_number != "0":
                 page_number_int = int(page_number) - 1
                 page = pdf_read.pages[page_number_int]
-                #ref : https://stackoverflow.com/questions/2693820/extract-images-from-pdf-without-resampling-in-python/37055040#37055040
-                xObject = page['/Resources']['/XObject'].get_object()
+                # ref : https://stackoverflow.com/questions/2693820/extract-images-from-pdf-without-resampling-in
+                # -python/37055040#37055040
+                x_object = page['/Resources']['/XObject'].get_object()
                 try:
-                    for obj in xObject:
-                        if xObject[obj]['/Subtype'] == '/Image':
-                            image = xObject[obj]
+                    for obj in x_object:
+                        if x_object[obj]['/Subtype'] == '/Image':
+                            image = x_object[obj]
                             image_data = image.get_data()
                             if '/Filter' in image:
                                 filters = image['/Filter']
@@ -271,11 +334,11 @@ class PDF:
                 pages_total = pdf_read.pages
                 for i in range(len(pages_total)):
                     page = pdf_read.pages[i]
-                    xObject = page['/Resources']['/XObject'].get_object()
+                    x_object = page['/Resources']['/XObject'].get_object()
                     try:
-                        for obj in xObject:
-                            if xObject[obj]['/Subtype'] == '/Image':
-                                image = xObject[obj]
+                        for obj in x_object:
+                            if x_object[obj]['/Subtype'] == '/Image':
+                                image = x_object[obj]
                                 image_data = image.get_data()
                                 if '/Filter' in image:
                                     filters = image['/Filter']
@@ -303,7 +366,7 @@ if __name__ == "__main__":
     print("-----------FoxyPDF v1-----------------")
     print("Veuillez choisir une action en indiquant un numéro entre 1 et 5.")
     print("--------------------")
-    foxypdf = PDF()
+    run = PDF()
     while True:
         print(
             " 1-Combiner des fichiers PDF."
@@ -314,13 +377,13 @@ if __name__ == "__main__":
         print()
         choix = input("Votre choix ? >>> ")
         if choix == "1":
-            foxypdf.fusion_files()
+            run.combine_menu()
         elif choix == "2":
-            foxypdf.extract_text()
+            run.extract_text()
         elif choix == "3":
-            foxypdf.extract_image()
+            run.extract_image()
         elif choix == "4":
-            foxypdf.extract_image2()
+            run.forced_extraction()
         elif choix == "5":
             print("Au revoir.")
             exit()
