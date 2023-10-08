@@ -13,32 +13,38 @@ add in the name given the directory where is the PDF. (ex : /path/name_of_pdf)
 ## Changelog
 
 Current stable version : v1.3
-    - Combine different pages from different pdf together
-    - FIX : Change name method "fusion_file" to "combine_menu"
-    - FIX : Change type of extracts' methods into "static method"
+
+- Combine different pages from different pdf together
+- FIX : Change name method "fusion_file" to "combine_menu"
+- FIX : Change type of extracts' methods into "static method"
+
 v1.2
-    - Combine complete PDF together
-    - Extract text from one PDF file to text format (full or page selection)
-    - Extract image from PDF file (total or selected page)
-        - Extract method 1 if the image was compressed inside the PDF
-        - Extract method 2 to force extraction but with no warranty about the result.
+
+- Combine complete PDF together
+- Extract text from one PDF file to text format (full or page selection)
+- Extract image from PDF file (total or selected page)
+  - Extract method 1 if the image was compressed inside the PDF
+  - Extract method 2 to force extraction but with no warranty about the result.
+
 v1.1
-    - Combine complete PDF together
-    - Extract text from one PDF file to .txt (full or page selection)
+
+- Combine complete PDF together
+- Extract text from one PDF file to .txt (full or page selection)
 
 v1.0
-    - Combine complete PDF together
+
+- Combine complete PDF together
 
 ## Features
 
-- Text extraction full document or pages selection to other format
+- Text extraction of full document or pages to other format (word, md, lateX ?...)
 - CLI Interface with argparse or click libraries (?)
 - GUI Interface
 
-
 ## Want to fork it ?
 
- > see requirement-dev.txt and https://pypdf2.readthedocs.io
+ > see requirement-dev.txt 
+ > and https://pypdf2.readthedocs.io
 
 ## Author
 
