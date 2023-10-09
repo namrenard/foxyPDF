@@ -49,3 +49,7 @@ v1.0
 ## Author
 
 Nicolas Renard
+
+## Other party licence
+
+part of the logo : Image by <a href="https://pixabay.com/users/klikovam-5635591/?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=7414046">Michaela</a> from <a href="https://pixabay.com//?utm_source=link-attribution&utm_medium=referral&utm_campaign=image&utm_content=7414046">Pixabay</a>

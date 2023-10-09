@@ -363,15 +363,15 @@ class PDF:
 
 # Main--------------------------------------------------------
 if __name__ == "__main__":
-    print("-----------FoxyPDF v1-----------------")
+    print("-----------FoxyPDF v1.3-----------------")
     print("Veuillez choisir une action en indiquant un numéro entre 1 et 5.")
     print("--------------------")
     run = PDF()
     while True:
         print(
-            " 1-Combiner des fichiers PDF."
-            "\n 2-Extraire du texte vers un fichier texte."
-            "\n 3-Extraire des images."
+            " 1-Combiner des fichiers ou des pages PDF."
+            "\n 2-Extraire du texte d'un fichier pdf."
+            "\n 3-Extraire des images d'un fichier pdf."
             "\n 4-Extraction forcée des images (si l'extraction '3' n'a pas marchée)."
             "\n 5-Quitter.")
         print()
