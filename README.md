@@ -10,9 +10,63 @@ Try ghostscript v.10.00.00 to regenerate the PDF if you have any problem regardi
 - PDF files need to be in the root directory of the script or else, don't forget to
 add in the name given the directory where is the PDF. (ex : /path/name_of_pdf)
 
+## How to use
+
+the script work with this general command in a prompt: 
+
+<code>$ foxyPDF.py [OPTIONS] COMMAND [ARGS]...</code>
+
+
+Commands available:
+
+- cf : Combine PDF files
+
+<code>$ foxyPDF.py cf [FILENAME]... FILE_OUT [OPTIONS]</code>
+  
+-  cp : Combinaison of pages from different PDF files. 
+
+<code>$ foxyPDF.py cp filename:pages FILE_OUT [OPTIONS]</code>
+
+-  ei  : Image extraction.
+
+<code>$ foxyPDF.py ei  FILENAME [OPTIONS]</code>
+
+Options:
+
+  -p, --page TEXT  The page to apply the extraction
+
+  --help           Show this message and exit.
+
+-  eiF : (Forced) Image extraction.
+
+<code>$ foxyPDF.py eiF  FILENAME [OPTIONS]</code>
+
+Options:
+
+  -p, --page TEXT  The page to apply the extraction
+
+  --help           Show this message and exit.
+
+-  et  : Text extraction.
+
+<code>$ foxyPDF.py etF FILENAME FILE_OUT [OPTIONS]</code>
+
+Options:
+
+  -p, --page TEXT  The pages, where is the text to extract. Use a coma to separate the pages.
+
+  --help           Show this message and exit.
+
+
 ## Changelog
 
-Current stable version : v1.3
+Current stable version : v2.0
+
+- add command line library with click
+- code refactoring for all methods
+
+
+v1.3
 
 - Combine different pages from different pdf together
 - FIX : Change name method "fusion_file" to "combine_menu"
